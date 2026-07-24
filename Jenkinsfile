@@ -28,7 +28,13 @@ pipeline {
                 sh 'php -v'
             }
         }
-
+	stage('Build Docker Image') {
+    		steps {
+       			 sh '''
+            			docker build -t todo-app:${BUILD_NUMBER} .
+        		'''
+    		}
+	}
     }
 
     post {
