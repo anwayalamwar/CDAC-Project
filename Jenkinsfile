@@ -44,18 +44,15 @@ pipeline {
         }
 
         stage('Trivy Image Scan') {
-    		steps {
-        	sh '''
-        	rm -rf /tmp/trivy-cache
-
-        	trivy image \
-          	--cache-dir /tmp/trivy-cache \
-          	--severity HIGH,CRITICAL \
-          	--format table \
-         	 --output trivy-report.txt \
-        	  ${IMAGE_NAME}:${IMAGE_TAG}
-       	 	'''
-    		}
+    		 
+        trivy image \
+          --cache-dir /tmp/trivy-cache \
+          --severity HIGH,CRITICAL \
+          --format table \
+          --output trivy-report.txt \
+          ${IMAGE_NAME}:${IMAGE_TAG}
+        '''
+    }
 	}	
 
         stage('Archive Trivy Report') {
