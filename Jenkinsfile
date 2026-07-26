@@ -136,23 +136,29 @@ pipeline {
 
         stage('OWASP ZAP Baseline Scan') {
             steps {
-                sh '''
-                    echo "========== OWASP ZAP Scan =========="
+        	sh '''
+        	echo "========== OWASP ZAP Scan =========="
 
-                    docker run --rm \
-                        -v $(pwd):/zap/wrk/:rw \
-                        ghcr.io/zaproxy/zaproxy:stable \
-                        zap-baseline.py \
-                        -t ${APP_URL} \
-                        -r zap-report.html || true
-                '''
-            }
+        	mkdir -p reports
+        	chmod -R 775 reports
+
+        	docker run --rm \
+        	--user $(id -u):$(id -g) \
+        	-v $(pwd)/reports:/zap/wrk:rw \
+        	ghcr.io/zaproxy/zaproxy:stable \
+        	zap-baseline.py \
+        	-t ${APP_URL} \
+        	-r zap-report.html
+        	'''
+   		 }
         }
 
         stage('Archive ZAP Report') {
             steps {
-                archiveArtifacts artifacts: 'zap-report.html', fingerprint: true
-            }
+        	archiveArtifacts artifacts: 'reports/zap-report.html',
+                         fingerprint: true,
+                         allowEmptyArchive: true
+    		}
         }
     }
 
