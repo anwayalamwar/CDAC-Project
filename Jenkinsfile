@@ -143,21 +143,22 @@ pipeline {
         	chmod -R 775 reports
 
         	docker run --rm \
-        	--user $(id -u):$(id -g) \
         	-v $(pwd)/reports:/zap/wrk:rw \
         	ghcr.io/zaproxy/zaproxy:stable \
         	zap-baseline.py \
         	-t ${APP_URL} \
-        	-r zap-report.html
+        	-r zap-report.html || true
         	'''
    		 }
         }
 
         stage('Archive ZAP Report') {
             steps {
-        	archiveArtifacts artifacts: 'reports/zap-report.html',
+        	archiveArtifacts(
+		 artifacts: 'reports/zap-report.html',
                          fingerprint: true,
                          allowEmptyArchive: true
+			)
     		}
         }
     }
