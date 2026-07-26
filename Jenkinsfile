@@ -25,20 +25,19 @@ pipeline {
             }
         }
 	stage('Trivy Image Scan') {
-    		steps {
-        		sh '''
+ 	   steps {
+        	sh '''
         	trivy image \
-        	--format template \
-        	--template "@$HOME/.trivy/html.tpl" \
-        	-o trivy-report.html \
+        	-f table \
+        	-o trivy-report.txt \
         	anwayalamwar/todo_app_sunbeam-web:latest
         	'''
-    		}
-	}
-	stage('Publish Trivy Report') {
+    	}
+	stage('Archive Trivy Report') {
 	    steps {
-        	archiveArtifacts artifacts: 'trivy-report.htm			l', fingerprint: true
-    		}
+       	archiveArtifacts artifacts: 'trivy-report.txt', finge		rprint: true
+		    }
+		}
 	}
     }
 }
