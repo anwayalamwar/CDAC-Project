@@ -9,11 +9,10 @@ pipeline {
             }
         }
 
-        stage('Verify Files') {
+        stage('PHP Validation') {
             steps {
                 sh '''
-                pwd
-                ls -la
+                find . -name "*.php" -exec php -l {} \\;
                 '''
             }
         }
