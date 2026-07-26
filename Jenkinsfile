@@ -24,20 +24,24 @@ pipeline {
                 }
             }
         }
-	stage('Trivy Image Scan') {
- 	   steps {
-        	sh '''
-        	trivy image \
-        	-f table \
-        	-o trivy-report.txt \
-        	anwayalamwar/todo_app_sunbeam-web:latest
-        	'''
-    	}
-	stage('Archive Trivy Report') {
-	    steps {
-       	archiveArtifacts artifacts: 'trivy-report.txt', finge		rprint: true
-		    }
-		}
-	}
+
+        stage('Trivy Image Scan') {
+            steps {
+                sh '''
+                trivy image \
+                --severity HIGH,CRITICAL \
+                --format table \
+                --output trivy-report.txt \
+                anwayalamwar/todo_app_sunbeam-web:latest
+                '''
+            }
+        }
+
+        stage('Archive Trivy Report') {
+            steps {
+                archiveArtifacts artifacts: 'trivy-report.txt', fingerprint: true
+            }
+        }
+
     }
 }
