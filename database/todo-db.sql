@@ -1,6 +1,6 @@
 -- Create a dedicated database user with appropriate privileges
-CREATE USER 'todo_user'@'localhost' IDENTIFIED BY 'password';
-GRANT ALL PRIVILEGES ON mytododb.* TO 'todo_user'@'localhost';
+CREATE USER 'todo_user'@'%' IDENTIFIED BY 'password';
+GRANT ALL PRIVILEGES ON mytododb.* TO 'todo_user'@'%';
 FLUSH PRIVILEGES;
 
 -- Create the database
