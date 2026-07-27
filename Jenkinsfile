@@ -97,22 +97,18 @@ pipeline {
         }
 
         stage('OWASP ZAP Scan') {
-            steps {
+
                 sh '''
-                ssh -o StrictHostKeyChecking=no ${SECURITY_USER}@${SECURITY_VM} << EOF
-
-                mkdir -p ~/zap-reports
-
-                rm -f ~/zap-reports/zap-report.html
+                ssh -o StrictHostKeyChecking=no ${SECURITY_USER}@${SECURITY_VM} \
+                "mkdir -p ~/zap-reports && \
+		rm -f ~/zap-reports/zap-report.html && \
 
                 docker run --rm \
                   -v ~/zap-reports:/zap/wrk:Z \
                   ghcr.io/zaproxy/zaproxy:stable \
                   zap-baseline.py \
                   -t ${APP_URL} \
-                  -r zap-report.html
-
-                EOF
+                  -r zap-report.html"
                 '''
             }
         }
