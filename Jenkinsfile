@@ -3,7 +3,12 @@ pipeline {
 
     environment {
         IMAGE_NAME = "anwayalamwar/todo_app_sunbeam-web"
-        IMAGE_TAG = "${BUILD_NUMBER}"
+        IMAGE_TAG  = "${BUILD_NUMBER}"
+
+        SECURITY_VM = "192.168.100.30"
+        SECURITY_USER = "sunbeam"
+
+        APP_URL = "http://192.168.100.21:30080"
     }
 
     stages {
@@ -16,14 +21,18 @@ pipeline {
 
         stage('PHP Syntax Check') {
             steps {
-                sh 'find . -name "*.php" -exec php -l {} \\;'
+                sh '''
+                find . -name "*.php" -exec php -l {} \\;
+                '''
             }
         }
 
         stage('SonarQube Scan') {
             steps {
                 withSonarQubeEnv('sonarqube') {
-                    sh '/opt/sonar-scanner/bin/sonar-scanner'
+                    sh '''
+                    /opt/sonar-scanner/bin/sonar-scanner
+                    '''
                 }
             }
         }
@@ -47,13 +56,15 @@ pipeline {
 
         stage('Docker Login') {
             steps {
-                withCredentials([usernamePassword(
-                    credentialsId: 'dockerhub',
-                    usernameVariable: 'USER',
-                    passwordVariable: 'PASS'
-                )]) {
+                withCredentials([
+                    usernamePassword(
+                        credentialsId: 'dockerhub',
+                        usernameVariable: 'USER',
+                        passwordVariable: 'PASS'
+                    )
+                ]) {
                     sh '''
-                    echo $PASS | docker login -u $USER --password-stdin
+                    echo "$PASS" | docker login -u "$USER" --password-stdin
                     '''
                 }
             }
@@ -84,11 +95,63 @@ pipeline {
                 '''
             }
         }
+
+        stage('OWASP ZAP Scan') {
+            steps {
+                sh '''
+                ssh -o StrictHostKeyChecking=no ${SECURITY_USER}@${SECURITY_VM} << EOF
+
+                mkdir -p ~/zap-reports
+
+                rm -f ~/zap-reports/zap-report.html
+
+                docker run --rm \
+                  -v ~/zap-reports:/zap/wrk:Z \
+                  ghcr.io/zaproxy/zaproxy:stable \
+                  zap-baseline.py \
+                  -t ${APP_URL} \
+                  -r zap-report.html
+
+                EOF
+                '''
+            }
+        }
+
+        stage('Collect ZAP Report') {
+            steps {
+                sh '''
+                scp -o StrictHostKeyChecking=no \
+                ${SECURITY_USER}@${SECURITY_VM}:~/zap-reports/zap-report.html \
+                ${WORKSPACE}/
+                '''
+            }
+        }
+
+        stage('Archive ZAP Report') {
+            steps {
+                archiveArtifacts artifacts: 'zap-report.html', fingerprint: true
+            }
+        }
+
     }
 
     post {
+
         always {
-            sh 'docker image prune -f'
+
+            sh '''
+            docker image prune -f
+            '''
+
+            cleanWs()
+        }
+
+        success {
+            echo 'SecureFlow Pipeline Completed Successfully.'
+        }
+
+        failure {
+            echo 'SecureFlow Pipeline Failed.'
         }
     }
 }
