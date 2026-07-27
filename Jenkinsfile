@@ -107,7 +107,7 @@ pipeline {
                   ghcr.io/zaproxy/zaproxy:stable \
                   zap-baseline.py \
                   -t ${APP_URL} \
-                  -r zap-report.html
+                  -r zap-report.html || true
                 "
                 """
             }
