@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         IMAGE_NAME = "anwayalamwar/todo_app_sunbeam-web"
-        IMAGE_TAG  = "${BUILD_NUMBER}"
+        IMAGE_TAG = "${BUILD_NUMBER}"
 
         SECURITY_VM = "192.168.100.30"
         SECURITY_USER = "sunbeam"
@@ -97,29 +97,29 @@ pipeline {
         }
 
         stage('OWASP ZAP Scan') {
-
-                sh '''
-                ssh -o StrictHostKeyChecking=no ${SECURITY_USER}@${SECURITY_VM} \
-                "mkdir -p ~/zap-reports && \
-		rm -f ~/zap-reports/zap-report.html && \
-
+            steps {
+                sh """
+                ssh -o StrictHostKeyChecking=no ${SECURITY_USER}@${SECURITY_VM} "
+                mkdir -p ~/zap-reports &&
+                rm -f ~/zap-reports/zap-report.html &&
                 docker run --rm \
                   -v ~/zap-reports:/zap/wrk:Z \
                   ghcr.io/zaproxy/zaproxy:stable \
                   zap-baseline.py \
                   -t ${APP_URL} \
-                  -r zap-report.html"
-                '''
+                  -r zap-report.html
+                "
+                """
             }
         }
 
         stage('Collect ZAP Report') {
             steps {
-                sh '''
+                sh """
                 scp -o StrictHostKeyChecking=no \
                 ${SECURITY_USER}@${SECURITY_VM}:~/zap-reports/zap-report.html \
-                ${WORKSPACE}/
-                '''
+                ${WORKSPACE}/zap-report.html
+                """
             }
         }
 
@@ -134,12 +134,9 @@ pipeline {
     post {
 
         always {
-
-            sh '''
-            docker image prune -f
-            '''
-
-            cleanWs()
+            sh 'docker image prune -f'
+            // Uncomment if you want to clean the workspace after archiving
+            // cleanWs()
         }
 
         success {
